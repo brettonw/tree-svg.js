@@ -42,7 +42,7 @@ var TreeSvg = function () {
         var svg = '<div class="tree-svg-div">' +
                     '<svg class="tree-svg-svg" xmlns="http://www.w3.org/2000/svg" version="1.1" ' +
                     'viewBox="-0.15, -0.1, 1.8, 1.2" ' +
-                    'preserveAspectRatio="xMidYMid slice"' +
+                    'preserveAspectRatio="xMidYMid meet"' +
                     '>';
         svg += '<rect x="0" y="0" width="1.5" height="1.0" fill="none" stroke="blue" stroke-width="0.001"/>';
 

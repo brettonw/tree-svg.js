@@ -42,7 +42,7 @@ var TreeSvg = function () {
         var svg = '<div class="tree-svg-div">' +
                     '<svg class="tree-svg-svg" xmlns="http://www.w3.org/2000/svg" version="1.1" ' +
                     'viewBox="-0.1, -0.1, 1.7, 1.1" ' +
-                    'preserveAspectRatio="xMidYMid meet"' +
+                    'preserveAspectRatio="xMidYMid slice"' +
                     '>';
         svg += '<rect x="0" y="0" width="1.5" height="1.0" fill="none" stroke="blue" stroke-width="0.001"/>';
 
@@ -79,7 +79,7 @@ var TreeSvg = function () {
         };
         recursiveScale(root);
 
-        // utility function for getting the tension right on the quadratic 
+        // utility function for getting the tension right on the quadratic
         // Bezier curve we'll use for the edges
         var lerp = function (a, b, i) {
             return (a * i) + (b * (1.0 - i));

@@ -67,7 +67,7 @@ var TreeSvg = function () {
             depth = Math.max(depth, y);
             return childX;
         };
-        var width = recursiveLayout(0, 0, root);
+        var width = recursiveLayout(0, (root.node == null) ? -1 : 0, root);
 
         // recursive re-scaling to fit in the drawing space
         var xScale = 1.5 / width;

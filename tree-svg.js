@@ -44,7 +44,7 @@ var TreeSvg = function () {
                     'viewBox="-0.15, -0.1, 1.8, 1.2" ' +
                     'preserveAspectRatio="xMidYMid meet"' +
                     '>';
-        svg += '<rect x="0" y="0" width="1.5" height="1.0" fill="none" stroke="blue" stroke-width="0.001"/>';
+        //svg += '<rect x="0" y="0" width="1.5" height="1.0" fill="none" stroke="blue" stroke-width="0.001"/>';
 
         // recursive layout in uniform scale space
         var depth = 0;

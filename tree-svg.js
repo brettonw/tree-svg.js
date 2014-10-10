@@ -48,20 +48,22 @@ var TreeSvg = function () {
 
         // recursive layout in uniform scale space
         var depth = 0;
-        var recursiveLayout = function (x, y, node) {
-            var childCount = node.children.length;
+        var recursiveLayout = function (x, y, container) {
+            var childCount = container.children.length;
             var childX = x;
             if (childCount > 0) {
                 var nextY = y + 1;
-                childX = recursiveLayout(x, nextY, node.children[0]);
+                childX = recursiveLayout(x, nextY, container.children[0]);
                 for (var i = 1; i < childCount; ++i) {
-                    childX = recursiveLayout(childX + 1, nextY, node.children[i]);
+                    childX = recursiveLayout(childX + 1, nextY, container.children[i]);
                 }
             }
 
             // compute layout
-            node.x = (x + childX) / 2.0;
-            node.y = y;
+            if (container.node != null) {
+                container.x = (x + childX) / 2.0;
+                container.y = y;
+            }
             depth = Math.max(depth, y);
             return childX;
         };
@@ -70,12 +72,14 @@ var TreeSvg = function () {
         // recursive re-scaling to fit in the drawing space
         var xScale = 1.5 / width;
         var yScale = 1.0 / depth;
-        var recursiveScale = function (node) {
-            for (var i = 0, childCount = node.children.length; i < childCount; ++i) {
-                recursiveScale(node.children[i]);
+        var recursiveScale = function (container) {
+            for (var i = 0, childCount = container.children.length; i < childCount; ++i) {
+                recursiveScale(container.children[i]);
             }
-            node.x *= xScale;
-            node.y *= yScale;
+            if (container.node != null) {
+                container.x *= xScale;
+                container.y *= yScale;
+            }
         };
         recursiveScale(root);
 
@@ -86,24 +90,28 @@ var TreeSvg = function () {
         };
 
         // draw the edges
-        var recursiveDrawEdges = function (node) {
-            for (var i = 0, childCount = node.children.length; i < childCount; ++i) {
-                var c = node.children[i];
-                //svg += '<line x1="' + node.x + '" y1="' + node.y + '" x2="' + c.x + '" y2="' + c.y + '" stroke="black" stroke-width="0.002" />';
-                recursiveDrawEdges(node.children[i]);
-                var mid = { x: (node.x + c.x) / 2.0, y: (node.y + c.y) / 2.0 };
-                svg += '<path d="M' + node.x + ',' + node.y + ' Q' + node.x + ',' + lerp(node.y, mid.y, 0.4) + ' ' + mid.x + ',' + mid.y + ' T' + c.x + ',' + c.y + '" fill="none" stroke="black" stroke-width="0.002"  />'
+        var recursiveDrawEdges = function (container) {
+            for (var i = 0, childCount = container.children.length; i < childCount; ++i) {
+                var c = container.children[i];
+                recursiveDrawEdges(container.children[i]);
+                if (container.node != null) {
+                    var mid = { x: (container.x + c.x) / 2.0, y: (container.y + c.y) / 2.0 };
+                    svg += '<path d="M' + container.x + ',' + container.y + ' Q' + container.x + ',' + lerp(container.y, mid.y, 0.4) + ' ' + mid.x + ',' + mid.y + ' T' + c.x + ',' + c.y + '" fill="none" stroke="black" stroke-width="0.002"  />'
+                    //svg += '<line x1="' + container.x + '" y1="' + container.y + '" x2="' + c.x + '" y2="' + c.y + '" stroke="black" stroke-width="0.002" />';
+                }
             }
         };
         recursiveDrawEdges(root);
 
         // draw the nodes
         var radius = Math.max(Math.min(xScale * 0.33, yScale * 0.25), 0.01);
-        var recursiveDrawNodes = function (node) {
-            for (var i = 0, childCount = node.children.length; i < childCount; ++i) {
-                recursiveDrawNodes(node.children[i]);
+        var recursiveDrawNodes = function (container) {
+            for (var i = 0, childCount = container.children.length; i < childCount; ++i) {
+                recursiveDrawNodes(container.children[i]);
             }
-            svg += '<circle cx="' + node.x + '" cy="' + node.y + '" r="' + radius + '" stroke="black" stroke-width="0.002" fill="red" />';
+            if (container.node != null) {
+                svg += '<circle cx="' + container.x + '" cy="' + container.y + '" r="' + radius + '" stroke="black" stroke-width="0.002" fill="red" />';
+            }
         };
         recursiveDrawNodes(root);
 

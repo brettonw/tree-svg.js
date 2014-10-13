@@ -133,11 +133,11 @@ var TreeSvg = function () {
                 }
             }
             if (container.node != null) {
-                svg += '<circle title="' + helper.getTitle(container.node) + '" ';
-                if (helper.getOnClick() != null) {
-                    svg += 'onclick="' + helper.getOnClick () + '(' + helper.getId(container.node) + ');" ';
+                svg += '<circle title="' + helper.getTitle(container) + '" ';
+                if (helper.onClick != null) {
+                    svg += 'onclick="' + helper.onClick + '(' + helper.getId(container) + ');" ';
                 }
-                svg += 'cx="' + container.x + '" cy="' + container.y + '" r="' + radius + '" stroke="black" stroke-width="0.002" fill="' + helper.getColor(container.node) + '" />';
+                svg += 'cx="' + container.x + '" cy="' + container.y + '" r="' + radius + '" stroke="black" stroke-width="0.002" fill="' + helper.getColor(container) + '" />';
             }
         };
         recursiveDrawNodes(root);
@@ -149,11 +149,11 @@ var TreeSvg = function () {
 
     ts.getDefaultHelper = function () {
         return {
-            getId: function (node) { return "node"; },
-            getTitle: function (node) { return this.getId (node); },
-            getColor: function (node) { return "red"; },
+            getId: function (container) { return "node"; },
+            getTitle: function (container) { return this.getId(container); },
+            getColor: function (container) { return "red"; },
             getShowChildren: function (container) { return true; },
-            getOnClick: function () { return null; }
+            onClick: null
         };
     };
 

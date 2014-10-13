@@ -150,7 +150,7 @@ var TreeSvg = function () {
     ts.getDefaultHelper = function () {
         return {
             getId: function (node) { return "node"; },
-            getTitle: function (node) { return this.getId (); },
+            getTitle: function (node) { return this.getId (node); },
             getColor: function (node) { return "red"; },
             getShowChildren: function (container) { return true; },
             getOnClick: function () { return null; }

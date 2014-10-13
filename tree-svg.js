@@ -36,7 +36,7 @@ var TreeSvg = function () {
         return (root.children.length > 1) ? root : root.children[0];
     };
 
-    ts.render = function (root) {
+    ts.renderWithHelper = function (root, helper) {
         // create the raw SVG picture for display, assumes a width/height aspect ratio of 3/2
         var buffer = 0.15;
         var svg = '<div class="tree-svg-div">' +
@@ -110,7 +110,7 @@ var TreeSvg = function () {
                 recursiveDrawNodes(container.children[i]);
             }
             if (container.node != null) {
-                svg += '<circle cx="' + container.x + '" cy="' + container.y + '" r="' + radius + '" stroke="black" stroke-width="0.002" fill="red" />';
+                svg += '<circle title="' + helper.getTitle(container.node) + '" cx="' + container.x + '" cy="' + container.y + '" r="' + radius + '" stroke="black" stroke-width="0.002" fill="' + helper.getColor(container.node) + '" />';
             }
         };
         recursiveDrawNodes(root);
@@ -118,6 +118,11 @@ var TreeSvg = function () {
         // close the plot
         svg += "</div><br>";
         return svg;
+    };
+
+    ts.render = function (root) {
+        var helper = { getTitle: function (node) { return "xxx"; }, getColor: function (node) { return "red"; } };
+        return this.renderWithHelper(root, helper);
     };
 
     return ts;

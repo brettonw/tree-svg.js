@@ -61,6 +61,16 @@ var TreeSvg = function () {
                     '>';
         //svg += '<rect x="0" y="0" width="1.5" height="1.0" fill="none" stroke="blue" stroke-width="0.001"/>';
 
+        // recursive depth check
+        var recursiveDepthCheck = function (depth, container) {
+            container.depth = depth;
+            var nextDepth = depth + 1;
+            for (var i = 0, childCount = container.children.length; i < childCount; ++i) {
+                recursiveDepthCheck(nextDepth, container.children[i]);
+            }
+        };
+        recursiveDepthCheck(0, root);
+
         // recursive layout in uniform scale space
         var depth = 0;
         var recursiveLayout = function (x, y, container) {

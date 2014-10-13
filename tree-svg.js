@@ -1,6 +1,21 @@
 var TreeSvg = function () {
     var ts = Object.create(null);
 
+    // function to make a tree container, and create the root node
+    /*
+    ts.makeContainer = function (node, parent) {
+        var container = {
+            "node": node,
+            "parent": parent,
+            "children": []
+        };
+        if (parent != null) {
+            parent.children.push(container);
+        }
+        return container;
+    };
+    */
+
     ts.extractTreeFromParentField = function (nodes, idField, parentIdField) {
         // internal function to get a node container from the id
         var nodesById = Object.create(null);
@@ -135,7 +150,7 @@ var TreeSvg = function () {
     ts.getDefaultHelper = function () {
         return {
             getId: function (node) { return "node"; },
-            getTitle: function (node) { return getId (); },
+            getTitle: function (node) { return this.getId (); },
             getColor: function (node) { return "red"; },
             getShowChildren: function (container) { return true; },
             getOnClick: function () { return null; }

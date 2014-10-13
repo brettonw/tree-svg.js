@@ -137,7 +137,9 @@ var TreeSvg = function () {
                 if (helper.onClick != null) {
                     svg += 'onclick="' + helper.onClick + '(' + helper.getId(container) + ');" ';
                 }
-                svg += 'cx="' + container.x + '" cy="' + container.y + '" r="' + radius + '" stroke="black" stroke-width="0.002" fill="' + helper.getColor(container) + '" />';
+                svg += 'cx="' + container.x + '" cy="' + container.y + '" r="' + radius + '" stroke="black" ';
+                svg += (helper.getShowChildren(container)) ? 'stroke-width="0.002" ' : 'stroke-width="0.004" ';
+                svg += 'fill="' + helper.getColor(container) + '" />';
             }
         };
         recursiveDrawNodes(root);

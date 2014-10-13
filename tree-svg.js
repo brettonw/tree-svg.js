@@ -125,7 +125,7 @@ var TreeSvg = function () {
         recursiveDrawEdges(root);
 
         // draw the nodes
-        var radius = Math.min (Math.max(Math.min(xScale * 0.33, yScale * 0.25), 0.01), 0.1);
+        var radius = Math.min (Math.max(Math.min(xScale * 0.33, yScale * 0.25), 0.01), 0.05);
         var recursiveDrawNodes = function (container) {
             if (helper.getShowChildren(container)) {
                 for (var i = 0, childCount = container.children.length; i < childCount; ++i) {

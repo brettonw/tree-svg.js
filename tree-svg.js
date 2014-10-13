@@ -49,13 +49,15 @@ var TreeSvg = function () {
         // recursive layout in uniform scale space
         var depth = 0;
         var recursiveLayout = function (x, y, container) {
-            var childCount = container.children.length;
             var childX = x;
-            if (childCount > 0) {
-                var nextY = y + 1;
-                childX = recursiveLayout(x, nextY, container.children[0]);
-                for (var i = 1; i < childCount; ++i) {
-                    childX = recursiveLayout(childX + 1, nextY, container.children[i]);
+            if (helper.getShowChildren(container)) {
+                var childCount = container.children.length;
+                if (childCount > 0) {
+                    var nextY = y + 1;
+                    childX = recursiveLayout(x, nextY, container.children[0]);
+                    for (var i = 1; i < childCount; ++i) {
+                        childX = recursiveLayout(childX + 1, nextY, container.children[i]);
+                    }
                 }
             }
 
@@ -73,8 +75,10 @@ var TreeSvg = function () {
         var xScale = 1.5 / width;
         var yScale = 1.0 / depth;
         var recursiveScale = function (container) {
-            for (var i = 0, childCount = container.children.length; i < childCount; ++i) {
-                recursiveScale(container.children[i]);
+            if (helper.getShowChildren(container)) {
+                for (var i = 0, childCount = container.children.length; i < childCount; ++i) {
+                    recursiveScale(container.children[i]);
+                }
             }
             if (container.node != null) {
                 container.x *= xScale;
@@ -91,13 +95,15 @@ var TreeSvg = function () {
 
         // draw the edges
         var recursiveDrawEdges = function (container) {
-            for (var i = 0, childCount = container.children.length; i < childCount; ++i) {
-                var c = container.children[i];
-                recursiveDrawEdges(container.children[i]);
-                if (container.node != null) {
-                    var mid = { x: (container.x + c.x) / 2.0, y: (container.y + c.y) / 2.0 };
-                    svg += '<path d="M' + container.x + ',' + container.y + ' Q' + container.x + ',' + lerp(container.y, mid.y, 0.4) + ' ' + mid.x + ',' + mid.y + ' T' + c.x + ',' + c.y + '" fill="none" stroke="black" stroke-width="0.002"  />'
-                    //svg += '<line x1="' + container.x + '" y1="' + container.y + '" x2="' + c.x + '" y2="' + c.y + '" stroke="black" stroke-width="0.002" />';
+            if (helper.getShowChildren(container)) {
+                for (var i = 0, childCount = container.children.length; i < childCount; ++i) {
+                    var c = container.children[i];
+                    recursiveDrawEdges(container.children[i]);
+                    if (container.node != null) {
+                        var mid = { x: (container.x + c.x) / 2.0, y: (container.y + c.y) / 2.0 };
+                        svg += '<path d="M' + container.x + ',' + container.y + ' Q' + container.x + ',' + lerp(container.y, mid.y, 0.4) + ' ' + mid.x + ',' + mid.y + ' T' + c.x + ',' + c.y + '" fill="none" stroke="black" stroke-width="0.002"  />'
+                        //svg += '<line x1="' + container.x + '" y1="' + container.y + '" x2="' + c.x + '" y2="' + c.y + '" stroke="black" stroke-width="0.002" />';
+                    }
                 }
             }
         };
@@ -106,8 +112,10 @@ var TreeSvg = function () {
         // draw the nodes
         var radius = Math.max(Math.min(xScale * 0.33, yScale * 0.25), 0.01);
         var recursiveDrawNodes = function (container) {
-            for (var i = 0, childCount = container.children.length; i < childCount; ++i) {
-                recursiveDrawNodes(container.children[i]);
+            if (helper.getShowChildren(container)) {
+                for (var i = 0, childCount = container.children.length; i < childCount; ++i) {
+                    recursiveDrawNodes(container.children[i]);
+                }
             }
             if (container.node != null) {
                 svg += '<circle title="' + helper.getTitle(container.node) + '" cx="' + container.x + '" cy="' + container.y + '" r="' + radius + '" stroke="black" stroke-width="0.002" fill="' + helper.getColor(container.node) + '" />';
@@ -121,7 +129,11 @@ var TreeSvg = function () {
     };
 
     ts.render = function (root) {
-        var helper = { getTitle: function (node) { return "xxx"; }, getColor: function (node) { return "red"; } };
+        var helper = {
+            getTitle: function (node) { return "node"; },
+            getColor: function (node) { return "red"; },
+            getShowChildren: function (container) { return true; }
+        };
         return this.renderWithHelper(root, helper);
     };
 

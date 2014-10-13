@@ -135,7 +135,7 @@ var TreeSvg = function () {
             if (container.node != null) {
                 svg += '<circle title="' + helper.getTitle(container.node) + '" ';
                 if (helper.getOnClick() != null) {
-                    svg += 'onclick="' + helper.getOnClick + '(' + helper.getId () + ');" ';
+                    svg += 'onclick="' + helper.getOnClick () + '(' + helper.getId(container.node) + ');" ';
                 }
                 svg += 'cx="' + container.x + '" cy="' + container.y + '" r="' + radius + '" stroke="black" stroke-width="0.002" fill="' + helper.getColor(container.node) + '" />';
             }

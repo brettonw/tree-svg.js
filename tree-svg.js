@@ -72,7 +72,7 @@ var TreeSvg = function () {
         recursiveDepthCheck(0, root);
 
         // recursive layout in uniform scale space
-        var depth = 0;
+        var depth = 1;
         var recursiveLayout = function (x, y, container) {
             var childX = x;
             if (helper.getShowChildren(container)) {

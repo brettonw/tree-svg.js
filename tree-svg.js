@@ -1,21 +1,130 @@
 var TreeSvg = function () {
     var ts = Object.create(null);
 
-    // function to make a tree container, and create the root node
-    /*
-    ts.makeContainer = function (node, parent) {
-        var container = {
-            "node": node,
-            "parent": parent,
-            "children": []
-        };
-        if (parent != null) {
-            parent.children.push(container);
-        }
-        return container;
-    };
-    */
+    // parameters used by the layout
+    var displayWidth = 1.5;
+    var displayHeight = 1.0;
 
+    // tension values to make pretty curves in the edges
+    var edgeTensionLinear = 0.4;
+    var edgeTensionRadial = 0.33;
+    var edgeTensionRadial2 = 0.85;
+
+    // utility function for getting the tension right on the quadratic
+    // Bezier curve we'll use for the edges
+    var lerp = function (a, b, i) {
+        return (a * i) + (b * (1.0 - i));
+    };
+
+    // various layouts supported by the tree renderer
+    var layouts = {
+        "Linear-Vertical": {
+            "setup": function (treeWidth, treeDepth) {
+                this.xScale = displayWidth / treeWidth;
+                this.yScale = displayHeight / treeDepth;
+                this.r = Math.min(Math.max(Math.min(this.xScale * 0.4, this.yScale * 0.4), 0.01), 0.05);
+            },
+            "xy": function (xy) { return { "x": xy.x * this.xScale, "y": xy.y * this.yScale }; },
+            "Q": function (xy, mid) {
+                var p = this.xy(xy);
+                return { "x": p.x, "y": lerp(p.y, mid.y, edgeTensionLinear) };
+            }
+        },
+        "Linear-Horizontal": {
+            "setup": function (treeWidth, treeDepth) {
+                this.xScale = displayWidth / treeDepth;
+                this.yScale = displayHeight / treeWidth;
+                this.r = Math.min(Math.max(Math.min(this.xScale * 0.4, this.yScale * 0.4), 0.01), 0.05);
+            },
+            "xy": function (xy) { return { "x": xy.y * this.xScale, "y": 1.0 - (xy.x * this.yScale) }; },
+            "Q": function (xy, mid) {
+                var p = this.xy(xy);
+                return { "x": lerp(p.x, mid.x, edgeTensionLinear), "y": p.y };
+            }
+        },
+        "Radial": {
+            "setup": function (treeWidth, treeDepth) {
+                this.xScale = (Math.PI * -2.0) / treeWidth;
+                this.yScale = (displayHeight * 0.5) / treeDepth;
+                this.c = { "x": displayWidth * 0.5, "y": displayHeight * 0.5 };
+                this.r = 0.01;
+            },
+            "xy": function (xy) {
+                var x = xy.x * this.xScale;
+                var y = xy.y * this.yScale;
+                return { "x": this.c.x + (Math.cos(x) * y), "y": this.c.y + (Math.sin(x) * y) };
+            },
+            "Q": function (xy, mid) {
+                // a little bit straight out from the origin, and then softened
+                // by blending toward the midpoint somewhat
+                var qm = this.xy({ "x": xy.x, "y": xy.y + edgeTensionRadial });
+                return { "x": lerp(qm.x, mid.x, edgeTensionRadial2), "y": lerp(qm.y, mid.y, edgeTensionRadial2) };
+            }
+        },
+        "Arc-Vertical": {
+            "setup": function (treeWidth, treeDepth) {
+                var angle = Math.asin((displayWidth * 0.5) / displayHeight) * 2.0;
+                this.zero = Math.PI - ((Math.PI - angle) / 2.0);
+                this.xScale = -angle / treeWidth;
+                this.yScale = displayHeight / treeDepth;
+                this.c = { "x": displayWidth * 0.5, "y": 0.0 };
+                this.r = 0.01;
+            },
+            "xy": function (xy) {
+                var x = (xy.x * this.xScale) + this.zero;
+                var y = xy.y * this.yScale;
+                return { "x": this.c.x + (Math.cos(x) * y), "y": this.c.y + (Math.sin(x) * y) };
+            },
+            "Q": function (xy, mid) {
+                // a little bit straight out from the origin, and then softened
+                // by blending toward the midpoint somewhat
+                var qm = this.xy({ "x": xy.x, "y": xy.y + edgeTensionRadial });
+                return { "x": lerp(qm.x, mid.x, edgeTensionRadial2), "y": lerp(qm.y, mid.y, edgeTensionRadial2) };
+            }
+        },
+        "Arc-Horizontal": {
+            "setup": function (treeWidth, treeDepth) {
+                var angle = Math.asin((displayHeight * 0.5) / displayWidth) * 2.0;
+                this.zero = angle / 2.0;
+                this.xScale = -angle / treeWidth;
+                this.yScale = displayWidth / treeDepth;
+                this.c = { "x": 0.0, "y": displayHeight * 0.5 };
+                this.r = 0.01;
+            },
+            "xy": function (xy) {
+                var x = (xy.x * this.xScale) + this.zero;
+                var y = xy.y * this.yScale;
+                return { "x": this.c.x + (Math.cos(x) * y), "y": this.c.y + (Math.sin(x) * y) };
+            },
+            "Q": function (xy, mid) {
+                // a little bit straight out from the origin, and then softened
+                // by blending toward the midpoint somewhat
+                var qm = this.xy({ "x": xy.x, "y": xy.y + edgeTensionRadial });
+                return { "x": lerp(qm.x, mid.x, edgeTensionRadial2), "y": lerp(qm.y, mid.y, edgeTensionRadial2) };
+            }
+        }
+    };
+
+    // functions to manipulate the desired layout
+    var layout = layouts["Linear-Vertical"];
+    ts.setLayout = function (layoutName) {
+        if (layoutName in layouts) {
+            layout = layouts[layoutName];
+        }
+    };
+
+    ts.getLayouts = function () {
+        var layoutNames = [];
+        for (var layoutName in layouts) {
+            if (layouts.hasOwnProperty(layoutName)) {
+                layoutNames.push(layoutName);
+            }
+        }
+        layoutNames.sort();
+        return layoutNames;
+    };
+
+    // helper function to walk an array of nodes and build a tree
     ts.extractTreeFromParentField = function (nodes, idField, parentIdField) {
         // internal function to get a node container from the id
         var nodesById = Object.create(null);
@@ -51,6 +160,8 @@ var TreeSvg = function () {
         return (root.children.length > 1) ? root : root.children[0];
     };
 
+    // render with a helper (an adapter object that links externally defined
+    // nodes to the display characteristics of the node)
     ts.renderWithHelper = function (root, helper) {
         // create the raw SVG picture for display, assumes a width/height aspect ratio of 3/2
         var buffer = 0.15;
@@ -59,7 +170,6 @@ var TreeSvg = function () {
                     'viewBox="-0.15, -0.1, 1.8, 1.2" ' +
                     'preserveAspectRatio="xMidYMid meet"' +
                     '>';
-        //svg += '<rect x="0" y="0" width="1.5" height="1.0" fill="none" stroke="blue" stroke-width="0.001"/>';
 
         // recursive depth check
         var recursiveDepthCheck = function (depth, container) {
@@ -96,38 +206,25 @@ var TreeSvg = function () {
         };
         var width = recursiveLayout(0, (root.node == null) ? -1 : 0, root);
 
-        // recursive re-scaling to fit in the drawing space
-        var xScale = 1.5 / width;
-        var yScale = 1.0 / depth;
-        var recursiveScale = function (container) {
-            if (helper.getShowChildren(container)) {
-                for (var i = 0, childCount = container.children.length; i < childCount; ++i) {
-                    recursiveScale(container.children[i]);
-                }
-            }
-            if (container.node != null) {
-                container.x *= xScale;
-                container.y *= yScale;
-            }
-        };
-        recursiveScale(root);
-
-        // utility function for getting the tension right on the quadratic
-        // Bezier curve we'll use for the edges
-        var lerp = function (a, b, i) {
-            return (a * i) + (b * (1.0 - i));
-        };
+        // setup the layout object with the computed tree properties
+        layout.setup(width, depth);
 
         // draw the edges
         var recursiveDrawEdges = function (container) {
             if (helper.getShowChildren(container)) {
                 for (var i = 0, childCount = container.children.length; i < childCount; ++i) {
-                    var c = container.children[i];
-                    recursiveDrawEdges(container.children[i]);
+                    var child = container.children[i];
+                    recursiveDrawEdges(child);
                     if (container.node != null) {
-                        var mid = { x: (container.x + c.x) / 2.0, y: (container.y + c.y) / 2.0 };
-                        svg += '<path d="M' + container.x + ',' + container.y + ' Q' + container.x + ',' + lerp(container.y, mid.y, 0.4) + ' ' + mid.x + ',' + mid.y + ' T' + c.x + ',' + c.y + '" fill="none" stroke="black" stroke-width="0.002"  />'
-                        //svg += '<line x1="' + container.x + '" y1="' + container.y + '" x2="' + c.x + '" y2="' + c.y + '" stroke="black" stroke-width="0.002" />';
+                        var p = layout.xy(container);
+                        var c = layout.xy(child);
+                        var mid = { x: (p.x + c.x) / 2.0, y: (p.y + c.y) / 2.0 };
+                        var q = layout.Q(container, mid);
+                        svg += '<path fill="none" stroke="#808080" stroke-width="0.002" d="';
+                        svg += 'M' + p.x + ',' + p.y + ' ';
+                        svg += 'Q' + q.x + ',' + q.y + ' ' + mid.x + ',' + mid.y + ' ';
+                        svg += 'T' + c.x + ',' + c.y + ' ';
+                        svg += '"/>'
                     }
                 }
             }
@@ -135,7 +232,6 @@ var TreeSvg = function () {
         recursiveDrawEdges(root);
 
         // draw the nodes
-        var radius = Math.min (Math.max(Math.min(xScale * 0.33, yScale * 0.25), 0.01), 0.05);
         var recursiveDrawNodes = function (container) {
             if (helper.getShowChildren(container)) {
                 for (var i = 0, childCount = container.children.length; i < childCount; ++i) {
@@ -143,13 +239,28 @@ var TreeSvg = function () {
                 }
             }
             if (container.node != null) {
-                svg += '<circle title="' + helper.getTitle(container) + '" ';
+                var title = helper.getTitle(container);
+                var id = helper.getId(container);
+
+                // add a node as a circle
+                svg += '<circle title="' + title + '" ';
                 if (helper.onClick != null) {
-                    svg += 'onclick="' + helper.onClick + '(' + helper.getId(container) + ');" ';
+                    svg += 'onclick="' + helper.onClick + '(' + id + ');" ';
                 }
-                svg += 'cx="' + container.x + '" cy="' + container.y + '" r="' + radius + '" stroke="black" ';
+                var p = layout.xy(container);
+                svg += 'cx="' + p.x + '" cy="' + p.y + '" r="' + layout.r + '" stroke="black" ';
                 svg += (helper.getShowChildren(container)) ? 'stroke-width="0.002" ' : 'stroke-width="0.005" ';
                 svg += 'fill="' + helper.getColor(container) + '" />';
+
+                // add the text description of the node
+                /*
+                svg += '<text x="' + container.x + '" y="' + container.y + '" ';
+                svg += 'font-family="sans-serif" font-size="0.025" dominant-baseline="middle" text-anchor="middle" fill="#404040"';
+                if (helper.onClick != null) {
+                    svg += 'onclick="' + helper.onClick + '(' + id + ');" ';
+                }
+                svg += '>' + title + '</text>';
+                */
             }
         };
         recursiveDrawNodes(root);

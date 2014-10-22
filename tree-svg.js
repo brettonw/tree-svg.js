@@ -294,7 +294,11 @@ var TreeSvg = function () {
                 var p = layout.xy(container);
                 svg += 'cx="' + p.x + '" cy="' + p.y + '" r="' + nodeRadius + '" ';
                 svg += (helper.getShowChildren(container) ? styleNames.node : styleNames.expand) + ' ';
-                svg += 'fill="' + helper.getColor(container) + '" />';
+
+                // this will override the class definition if fill was not 
+                // *EVER*specified
+                svg += 'fill="' + helper.getColor(container) + '" ';
+                sg += '/>';
 
                 // add the text description of the node
                 /*

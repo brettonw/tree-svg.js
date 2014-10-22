@@ -33,7 +33,6 @@
 .tree-svg-node {
     stroke:             #202020;
     stroke-width:       0.002;
-    fill:               #ff6060;
 }
 
 .tree-svg-node-expandable {

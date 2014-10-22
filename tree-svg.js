@@ -22,7 +22,10 @@ var TreeSvg = function () {
             "setup": function (treeWidth, treeDepth) {
                 this.xScale = displayWidth / treeWidth;
                 this.yScale = displayHeight / treeDepth;
-                this.r = Math.min(Math.max(Math.min(this.xScale * 0.4, this.yScale * 0.4), 0.01), 0.05);
+            },
+            "drawRow": function (i) {
+                var y = i * this.yScale;
+                return '<line x1="' + 0 + '" y1="' + y + '" x2="' + displayWidth + '" y2="' + y + '" ' + styleNames.row + ' />';
             },
             "xy": function (xy) { return { "x": xy.x * this.xScale, "y": xy.y * this.yScale }; },
             "Q": function (xy, mid) {
@@ -34,7 +37,10 @@ var TreeSvg = function () {
             "setup": function (treeWidth, treeDepth) {
                 this.xScale = displayWidth / treeDepth;
                 this.yScale = displayHeight / treeWidth;
-                this.r = Math.min(Math.max(Math.min(this.xScale * 0.4, this.yScale * 0.4), 0.01), 0.05);
+            },
+            "drawRow": function (i) {
+                var x = i * this.xScale;
+                return '<line x1="' + x + '" y1="' + 0 + '" x2="' + x + '" y2="' + displayHeight + '" ' + styleNames.row + ' />';
             },
             "xy": function (xy) { return { "x": xy.y * this.xScale, "y": 1.0 - (xy.x * this.yScale) }; },
             "Q": function (xy, mid) {
@@ -44,10 +50,13 @@ var TreeSvg = function () {
         },
         "Radial": {
             "setup": function (treeWidth, treeDepth) {
-                this.xScale = (Math.PI * -2.0) / treeWidth;
+                this.xScale = (Math.PI * -2.0) / (treeWidth + 1);
                 this.yScale = (displayHeight * 0.5) / treeDepth;
                 this.c = { "x": displayWidth * 0.5, "y": displayHeight * 0.5 };
-                this.r = 0.01;
+            },
+            "drawRow": function (i) {
+                var r = i * this.yScale;
+                return '<circle cx="' + this.c.x + '" cy="' + this.c.y + '" r="' + r + '" ' + styleNames.row + ' />';
             },
             "xy": function (xy) {
                 var x = xy.x * this.xScale;
@@ -65,10 +74,16 @@ var TreeSvg = function () {
             "setup": function (treeWidth, treeDepth) {
                 var angle = Math.asin((displayWidth * 0.5) / displayHeight) * 2.0;
                 this.zero = Math.PI - ((Math.PI - angle) / 2.0);
+                this.treeWidth = treeWidth;
                 this.xScale = -angle / treeWidth;
                 this.yScale = displayHeight / treeDepth;
                 this.c = { "x": displayWidth * 0.5, "y": 0.0 };
-                this.r = 0.01;
+            },
+            "drawRow": function (i) {
+                var left = this.xy({ "x": 0, "y": i });
+                var right = this.xy({ "x": this.treeWidth, "y": i });
+                var r = i * this.yScale;
+                return '<path d="M' + left.x + ',' + left.y + ' A' + r + ',' + r + ' 0 0,0 ' + right.x + ',' + right.y + '" ' + styleNames.row + ' />';
             },
             "xy": function (xy) {
                 var x = (xy.x * this.xScale) + this.zero;
@@ -86,10 +101,16 @@ var TreeSvg = function () {
             "setup": function (treeWidth, treeDepth) {
                 var angle = Math.asin((displayHeight * 0.5) / displayWidth) * 2.0;
                 this.zero = angle / 2.0;
+                this.treeWidth = treeWidth;
                 this.xScale = -angle / treeWidth;
                 this.yScale = displayWidth / treeDepth;
                 this.c = { "x": 0.0, "y": displayHeight * 0.5 };
-                this.r = 0.01;
+            },
+            "drawRow": function (i) {
+                var left = this.xy({ "x": 0, "y": i });
+                var right = this.xy({ "x": this.treeWidth, "y": i });
+                var r = i * this.yScale;
+                return '<path d="M' + left.x + ',' + left.y + ' A' + r + ',' + r + ' 0 0,0 ' + right.x + ',' + right.y + '" ' + styleNames.row + ' />';
             },
             "xy": function (xy) {
                 var x = (xy.x * this.xScale) + this.zero;
@@ -122,6 +143,23 @@ var TreeSvg = function () {
         }
         layoutNames.sort();
         return layoutNames;
+    };
+
+    // the rendering radius of nodes
+    ts.nodeRadius = 0.015;
+
+    // other rendering appearances (class names)
+    var styleNames = {
+        "row": 'class="tree-svg-row"',
+        "edge": 'class="tree-svg-edge"',
+        "node": 'class="tree-svg-node"',
+        "expand": 'class="tree-svg-node-expandable"',
+    };
+
+    ts.setStyle = function (styleName, useCss) {
+        if (styleName in styleNames) {
+            styleNames[styleName] = useCss;
+        }
     };
 
     // helper function to walk an array of nodes and build a tree
@@ -209,6 +247,11 @@ var TreeSvg = function () {
         // setup the layout object with the computed tree properties
         layout.setup(width, depth);
 
+        // draw the rows
+        for (var i = 0; i <= depth; ++i) {
+            svg += layout.drawRow(i);
+        }
+
         // draw the edges
         var recursiveDrawEdges = function (container) {
             if (helper.getShowChildren(container)) {
@@ -220,7 +263,7 @@ var TreeSvg = function () {
                         var c = layout.xy(child);
                         var mid = { x: (p.x + c.x) / 2.0, y: (p.y + c.y) / 2.0 };
                         var q = layout.Q(container, mid);
-                        svg += '<path fill="none" stroke="#808080" stroke-width="0.002" d="';
+                        svg += '<path ' + styleNames.edge + ' d="';
                         svg += 'M' + p.x + ',' + p.y + ' ';
                         svg += 'Q' + q.x + ',' + q.y + ' ' + mid.x + ',' + mid.y + ' ';
                         svg += 'T' + c.x + ',' + c.y + ' ';
@@ -232,6 +275,7 @@ var TreeSvg = function () {
         recursiveDrawEdges(root);
 
         // draw the nodes
+        var nodeRadius = this.nodeRadius;
         var recursiveDrawNodes = function (container) {
             if (helper.getShowChildren(container)) {
                 for (var i = 0, childCount = container.children.length; i < childCount; ++i) {
@@ -248,8 +292,8 @@ var TreeSvg = function () {
                     svg += 'onclick="' + helper.onClick + '(' + id + ');" ';
                 }
                 var p = layout.xy(container);
-                svg += 'cx="' + p.x + '" cy="' + p.y + '" r="' + layout.r + '" stroke="black" ';
-                svg += (helper.getShowChildren(container)) ? 'stroke-width="0.002" ' : 'stroke-width="0.005" ';
+                svg += 'cx="' + p.x + '" cy="' + p.y + '" r="' + nodeRadius + '" ';
+                svg += (helper.getShowChildren(container) ? styleNames.node : styleNames.expand) + ' ';
                 svg += 'fill="' + helper.getColor(container) + '" />';
 
                 // add the text description of the node

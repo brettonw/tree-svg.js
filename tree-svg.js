@@ -298,7 +298,7 @@ var TreeSvg = function () {
                 // this will override the class definition if fill was not 
                 // *EVER*specified
                 svg += 'fill="' + helper.getColor(container) + '" ';
-                sg += '/>';
+                svg += '/>';
 
                 // add the text description of the node
                 /*

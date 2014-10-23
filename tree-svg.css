@@ -22,6 +22,7 @@
     stroke:             #808080;
     stroke-width:       0.002;
     fill:               none;
+    pointer-events:     none;
 }
 
 .tree-svg-row {
@@ -38,4 +39,13 @@
 .tree-svg-node-expandable {
     stroke:             #000000;
     stroke-width:       0.002;
+}
+
+.tree-svg-node-title {
+    font-weight:        normal;
+    font-family:        sans-serif;
+    font-size:          0.002em;
+    text-anchor:        end;
+    fill:               #404040;
+    dominant-baseline:  middle;
 }

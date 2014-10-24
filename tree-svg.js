@@ -54,7 +54,7 @@ var TreeSvg = function () {
             },
             "textTransform": function (xy) {
                 var p = this.xy(xy);
-                return 'transform="rotate(90, ' + p.x + ', ' + p.y + ') translate(-' + (nodeRadius + 0.005) + ', -0.001)"';
+                return 'transform="rotate(90, ' + p.x + ', ' + p.y + ') translate(-' + (nodeRadius * 1.5) + ', ' + (nodeRadius * 0.75) + ')"';
             }
         },
         "Linear-Horizontal": {

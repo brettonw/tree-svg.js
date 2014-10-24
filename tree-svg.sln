@@ -4,6 +4,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tree-svg.js", "tree-svg.js", "{A7FDD778-036F-4962-A7ED-D13B9BBEA59E}"
+	ProjectSection(SolutionItems) = preProject
+		index.html = index.html
+		style.css = style.css
+		test.js = test.js
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tree-svg", "tree-svg", "{DB7DC343-46D5-4BF6-9C2C-E1D412214C78}"
 	ProjectSection(SolutionItems) = preProject

@@ -178,10 +178,14 @@ var TreeSvg = function () {
     // helper function to walk an array of nodes and build a tree
     ts.extractTreeFromParentField = function (nodes, idField, parentIdField) {
         // internal function to get a node container from the id
-        var nodesById = Object.create(null);
+        var nodesById = {};
         var getContainerById = function (id, node) {
             if (!(id in nodesById)) {
-                nodesById[id] = { "children": [] };
+                nodesById[id] = {
+                    "children": [],
+                    "expanded": true,
+                    "id":id
+                };
             }
             var container = nodesById[id];
             if (node != null) {
@@ -249,11 +253,16 @@ var TreeSvg = function () {
         };
         recursiveDepthCheck(0, root);
 
+        // function to see if we should traverse further in the tree
+        var getShowChildren = function (container) {
+            return (container.children.length == 0) || container.expanded;
+        }
+
         // recursive layout in uniform scale space
         var depth = 1;
         var recursiveLayout = function (x, y, container) {
             var childX = x;
-            if (helper.getShowChildren(container)) {
+            if (getShowChildren(container)) {
                 var childCount = container.children.length;
                 if (childCount > 0) {
                     var nextY = y + 1;
@@ -295,7 +304,7 @@ var TreeSvg = function () {
 
         // draw the edges
         var recursiveDrawEdges = function (container) {
-            if (helper.getShowChildren(container)) {
+            if (getShowChildren(container)) {
                 for (var i = 0, childCount = container.children.length; i < childCount; ++i) {
                     var child = container.children[i];
                     recursiveDrawEdges(child);
@@ -315,27 +324,22 @@ var TreeSvg = function () {
 
         // draw the nodes
         var recursiveDrawNodes = function (container) {
-            if (helper.getShowChildren(container)) {
+            if (getShowChildren(container)) {
                 for (var i = 0, childCount = container.children.length; i < childCount; ++i) {
                     recursiveDrawNodes(container.children[i]);
                 }
             }
             if (container.node != null) {
                 var title = helper.getTitle(container);
-                var id = helper.getId(container);
 
-                // create an SVG group
-                svg += '<g ';
-                if (helper.onClick != null) {
-                    svg += 'onclick="' + helper.onClick + '(' + id + ');" ';
-                }
-                svg += '>';
+                // create an SVG group, with a click handler
+                svg += '<g onclick="onTreeClick(' + container.id + ');">';
 
                 // add a node as a circle
                 svg += '<circle title="' + title + '" ';
                 var p = layout.xy(container);
                 svg += 'cx="' + p.x + '" cy="' + p.y + '" r="' + nodeRadius + '" ';
-                svg += (helper.getShowChildren(container) ? styleNames.node : styleNames.expand) + ' ';
+                svg += (getShowChildren(container) ? styleNames.node : styleNames.expand) + ' ';
 
                 // this will override the class definition if fill was not
                 // *EVER*specified - useful for programmatic control
@@ -363,11 +367,8 @@ var TreeSvg = function () {
 
     ts.getDefaultHelper = function () {
         return {
-            getId: function (container) { return "node"; },
-            getTitle: function (container) { return this.getId(container); },
-            getColor: function (container) { return "red"; },
-            getShowChildren: function (container) { return true; },
-            onClick: null
+            getTitle: function (container) { return "" + id; },
+            getColor: function (container) { return "red"; }
         };
     };
 

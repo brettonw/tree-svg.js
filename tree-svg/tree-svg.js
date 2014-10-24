@@ -12,7 +12,7 @@ var TreeSvg = function () {
     var displayHeight = 100;
 
     // parameters used to make pretty curves in the edges
-    var drawArcEdges = false;
+    var drawArcEdges = true;
     var edgeTension = 0.4;
 
     // "padding" values on the row lines

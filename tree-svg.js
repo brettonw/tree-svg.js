@@ -2,14 +2,14 @@ var TreeSvg = function () {
     var ts = Object.create(null);
 
     // the rendering radius of nodes
-    var nodeRadius = 0.015;
+    var nodeRadius = 1.5;
     ts.setNodeRadius = function (r) {
         nodeRadius = r;
     };
 
     // parameters used by the layout
-    var displayWidth = 1.5;
-    var displayHeight = 1.0;
+    var displayWidth = 150;
+    var displayHeight = 100;
 
     // tension values to make pretty curves in the edges
     var drawArcEdges = true;
@@ -43,6 +43,15 @@ var TreeSvg = function () {
                 var p = this.xy(xy);
                 return { "x": p.x, "y": lerp(p.y, mid.y, edgeTensionLinear) };
             },
+            "edge": function (from, to) {
+                var f = this.xy (from);
+                var t = this.xy (to);
+                var m = (f.y + t.y) / 2.0;
+                var svg = '<path ' + styleNames.edge + ' ';
+                svg += 'd="M' + f.x + ',' + f.y + ' C' + f.x + ',' + m + ' ' + t.x + ',' + m + ' ' + t.x + ',' + t.y + '" ';
+                svg += '/>';
+                return svg;
+            },
             "textTransform": function (xy) {
                 var p = this.xy(xy);
                 return 'transform="rotate(90, ' + p.x + ', ' + p.y + ') translate(-' + (nodeRadius + 0.005) + ', -0.001)"';
@@ -61,6 +70,15 @@ var TreeSvg = function () {
             "Q": function (xy, mid) {
                 var p = this.xy(xy);
                 return { "x": lerp(p.x, mid.x, edgeTensionLinear), "y": p.y };
+            },
+            "edge": function (from, to) {
+                var f = this.xy (from);
+                var t = this.xy (to);
+                var m = (f.x + t.x) / 2.0;
+                var svg = '<path ' + styleNames.edge + ' ';
+                svg += 'd="M' + f.x + ',' + f.y + ' C' + m + ',' + f.y + ' ' + m + ',' + t.y + ' ' + t.x + ',' + t.y + '" ';
+                svg += '/>';
+                return svg;
             },
             "textTransform": function (xy) {
                 return 'transform="translate(-' + (nodeRadius + 0.005) + ', -0.001)"';
@@ -86,6 +104,9 @@ var TreeSvg = function () {
                 // by blending toward the midpoint somewhat
                 var qm = this.xy({ "x": xy.x, "y": xy.y + edgeTensionRadial });
                 return { "x": lerp(qm.x, mid.x, edgeTensionRadial2), "y": lerp(qm.y, mid.y, edgeTensionRadial2) };
+            },
+            "edge": function (from, to) {
+                return "";
             },
             "textTransform": function (xy) {
                 var p = this.xy(xy);
@@ -119,6 +140,9 @@ var TreeSvg = function () {
                 var qm = this.xy({ "x": xy.x, "y": xy.y + edgeTensionRadial });
                 return { "x": lerp(qm.x, mid.x, edgeTensionRadial2), "y": lerp(qm.y, mid.y, edgeTensionRadial2) };
             },
+            "edge": function (from, to) {
+                return "";
+            },
             "textTransform": function (xy) {
                 var p = this.xy(xy);
                 var angle = ((xy.x * this.xScale) + this.zero) * (180.0 / Math.PI);
@@ -150,6 +174,9 @@ var TreeSvg = function () {
                 // by blending toward the midpoint somewhat
                 var qm = this.xy({ "x": xy.x, "y": xy.y + edgeTensionRadial });
                 return { "x": lerp(qm.x, mid.x, edgeTensionRadial2), "y": lerp(qm.y, mid.y, edgeTensionRadial2) };
+            },
+            "edge": function (from, to) {
+                return "";
             },
             "textTransform": function (xy) {
                 var p = this.xy(xy);
@@ -192,7 +219,6 @@ var TreeSvg = function () {
             styleNames[styleName] = useCss;
         }
     };
-
     // helper function to walk an array of nodes and build a tree
     ts.extractTreeFromParentField = function (nodes, idField, parentIdField) {
         // internal function to get a node container from the id
@@ -236,7 +262,7 @@ var TreeSvg = function () {
         var buffer = 0.15;
         var svg = '<div class="tree-svg-div">' +
                     '<svg class="tree-svg-svg" xmlns="http://www.w3.org/2000/svg" version="1.1" ' +
-                    'viewBox="-0.15, -0.1, 1.8, 1.2" ' +
+                    'viewBox="-15, -10, 180, 120" ' +
                     'preserveAspectRatio="xMidYMid meet"' +
                     '>';
 
@@ -290,9 +316,11 @@ var TreeSvg = function () {
                     var child = container.children[i];
                     recursiveDrawEdges(child);
                     if (container.node != null) {
-                        var p = layout.xy(container);
-                        var c = layout.xy(child);
                         if (drawArcEdges) {
+                            svg += layout.edge (container, child);
+                            /*
+                            var p = layout.xy(container);
+                            var c = layout.xy(child);
                             var mid = { x: (p.x + c.x) / 2.0, y: (p.y + c.y) / 2.0 };
                             var q = layout.Q(container, mid);
                             svg += '<path ' + styleNames.edge + ' d="';
@@ -300,7 +328,10 @@ var TreeSvg = function () {
                             svg += 'Q' + q.x + ',' + q.y + ' ' + mid.x + ',' + mid.y + ' ';
                             svg += 'T' + c.x + ',' + c.y + ' ';
                             svg += '"/>'
+                            */
                         } else {
+                            var p = layout.xy(container);
+                            var c = layout.xy(child);
                             svg += '<line ' + styleNames.edge + ' x1="' + p.x + '" y1="' + p.y + '" x2="' + c.x + '" y2="' + c.y + '" />';
                         }
                     }
@@ -333,7 +364,7 @@ var TreeSvg = function () {
                 svg += 'cx="' + p.x + '" cy="' + p.y + '" r="' + nodeRadius + '" ';
                 svg += (helper.getShowChildren(container) ? styleNames.node : styleNames.expand) + ' ';
 
-                // this will override the class definition if fill was not 
+                // this will override the class definition if fill was not
                 // *EVER*specified
                 svg += 'fill="' + helper.getColor(container) + '" ';
                 svg += '/>';

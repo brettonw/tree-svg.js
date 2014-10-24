@@ -20,31 +20,31 @@
 
 .tree-svg-edge {
     stroke:             #808080;
-    stroke-width:       0.002;
+    stroke-width:       0.2;
     fill:               none;
     pointer-events:     none;
 }
 
 .tree-svg-row {
     stroke:             #d0d0d0;
-    stroke-width:       0.001;
+    stroke-width:       0.1;
     fill:               none;
 }
 
 .tree-svg-node {
     stroke:             #202020;
-    stroke-width:       0.002;
+    stroke-width:       0.2;
 }
 
 .tree-svg-node-expandable {
     stroke:             #000000;
-    stroke-width:       0.002;
+    stroke-width:       0.2;
 }
 
 .tree-svg-node-title {
     font-weight:        normal;
     font-family:        sans-serif;
-    font-size:          0.002em;
+    font-size:          0.2em;
     text-anchor:        end;
     fill:               #404040;
 }

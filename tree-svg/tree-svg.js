@@ -11,15 +11,15 @@ var TreeSvg = function () {
     var displayWidth = 150;
     var displayHeight = 100;
 
-    // tension values to make pretty curves in the edges
-    var drawArcEdges = true;
-    var edgeTensionLinear = 0.4;
-    var edgeTensionRadial = 0.33;
-    var edgeTensionRadial2 = 0.85;
+    // parameters used to make pretty curves in the edges
+    var drawArcEdges = false;
+    var edgeTension = 0.4;
 
     // "padding" values on the row lines
-    var leftRowPadding = -2;
-    var rightRowPadding = 2;
+    var rowPadding = 2;
+
+    // label drawing assistance
+    var drawLabels = true;
 
     // utility function for getting the tension right on the quadratic
     // Bezier curve we'll use for the edges
@@ -27,163 +27,119 @@ var TreeSvg = function () {
         return (a * i) + (b * (1.0 - i));
     };
 
+    // utility function to make points from pairs
+    var point = function (x, y) { return { "x": x, "y": y }; };
+
+    // layout base classes
+    var linearLayout = function (include) {
+        var ll = Object.create (include);
+
+        ll.setup = function (treeWidth, treeDepth) {
+            this.treeWidth = treeWidth;
+            Object.getPrototypeOf (this).setup (treeWidth, treeDepth);
+        };
+
+        ll.drawRow = function (i) {
+            var a = this.xy(point(-rowPadding, i));
+            var b = this.xy(point(this.treeWidth + rowPadding, i));
+            return '<line ' + styleNames.row + ' x1="' + a.x + '" y1="' + a.y + '" x2="' + b.x + '" y2="' + b.y + '" />';
+        };
+
+        return ll;
+    };
+
+    var radialLayout = function (include) {
+        var rl = Object.create(include);
+
+        rl.setup = function (treeWidth, treeDepth) {
+            this.treeWidth = treeWidth;
+            Object.getPrototypeOf(this).setup(treeWidth, treeDepth);
+        };
+
+        rl.drawRow = function (i) {
+            var prototype = Object.getPrototypeOf(this);
+            if (prototype.hasOwnProperty("drawRow")) {
+                return prototype.drawRow (i);
+            } else {
+                var left = this.xy(point(-rowPadding, i));
+                var right = this.xy(point(this.treeWidth + rowPadding, i));
+                var r = i * this.yScale;
+                return '<path d="M' + left.x + ',' + left.y + ' A' + r + ',' + r + ' 0 0,0 ' + right.x + ',' + right.y + '" ' + styleNames.row + ' />';
+            }
+        };
+
+        rl.xy = function (xy) {
+            var x = (xy.x * this.xScale) + this.zero;
+            var y = xy.y * this.yScale;
+            return point(this.c.x + (Math.cos(x) * y), this.c.y + (Math.sin(x) * y));
+        };
+
+        rl.textTransform = function (xy) {
+            var p = this.xy(xy);
+            var angle = ((xy.x * this.xScale) + this.zero) * (180.0 / Math.PI);
+            return 'transform="rotate(' + angle + ', ' + p.x + ', ' + p.y + ') translate(-' + (nodeRadius * 1.5) + ', ' + (nodeRadius * 0.66) + ')"';
+        };
+
+        return rl;
+    };
+
     // various layouts supported by the tree renderer
     var layouts = {
-        "Linear-Vertical": {
+        "Linear-Vertical": linearLayout ({
             "setup": function (treeWidth, treeDepth) {
                 this.xScale = displayWidth / treeWidth;
                 this.yScale = displayHeight / treeDepth;
             },
-            "drawRow": function (i) {
-                var y = i * this.yScale;
-                return '<line x1="' + (leftRowPadding * this.xScale) + '" y1="' + y + '" x2="' + (displayWidth + (rightRowPadding * this.xScale)) + '" y2="' + y + '" ' + styleNames.row + ' />';
-            },
-            "xy": function (xy) { return { "x": xy.x * this.xScale, "y": xy.y * this.yScale }; },
-            "Q": function (xy, mid) {
-                var p = this.xy(xy);
-                return { "x": p.x, "y": lerp(p.y, mid.y, edgeTensionLinear) };
-            },
-            "edge": function (from, to) {
-                var f = this.xy (from);
-                var t = this.xy (to);
-                var m = (f.y + t.y) / 2.0;
-                var svg = '<path ' + styleNames.edge + ' ';
-                svg += 'd="M' + f.x + ',' + f.y + ' C' + f.x + ',' + m + ' ' + t.x + ',' + m + ' ' + t.x + ',' + t.y + '" ';
-                svg += '/>';
-                return svg;
+            "xy": function (xy) {
+                return point(xy.x * this.xScale, xy.y * this.yScale);
             },
             "textTransform": function (xy) {
                 var p = this.xy(xy);
-                return 'transform="rotate(90, ' + p.x + ', ' + p.y + ') translate(-' + (nodeRadius * 1.5) + ', ' + (nodeRadius * 0.75) + ')"';
+                return 'transform="rotate(90, ' + p.x + ', ' + p.y + ') translate(-' + (nodeRadius * 1.5) + ', ' + (nodeRadius * 0.66) + ')"';
             }
-        },
-        "Linear-Horizontal": {
+        }),
+        "Linear-Horizontal": linearLayout ({
             "setup": function (treeWidth, treeDepth) {
                 this.xScale = displayWidth / treeDepth;
                 this.yScale = displayHeight / treeWidth;
             },
-            "drawRow": function (i) {
-                var x = i * this.xScale;
-                return '<line x1="' + x + '" y1="' + (leftRowPadding * this.yScale) + '" x2="' + x + '" y2="' + (displayHeight + (rightRowPadding * this.yScale)) + '" ' + styleNames.row + ' />';
-            },
-            "xy": function (xy) { return { "x": xy.y * this.xScale, "y": 1.0 - (xy.x * this.yScale) }; },
-            "Q": function (xy, mid) {
-                var p = this.xy(xy);
-                return { "x": lerp(p.x, mid.x, edgeTensionLinear), "y": p.y };
-            },
-            "edge": function (from, to) {
-                var f = this.xy (from);
-                var t = this.xy (to);
-                var m = (f.x + t.x) / 2.0;
-                var svg = '<path ' + styleNames.edge + ' ';
-                svg += 'd="M' + f.x + ',' + f.y + ' C' + m + ',' + f.y + ' ' + m + ',' + t.y + ' ' + t.x + ',' + t.y + '" ';
-                svg += '/>';
-                return svg;
+            "xy": function (xy) {
+                return point(xy.y * this.xScale, displayHeight - (xy.x * this.yScale));
             },
             "textTransform": function (xy) {
-                return 'transform="translate(-' + (nodeRadius + 0.005) + ', -0.001)"';
+                return 'transform="translate(-' + (nodeRadius * 1.5) + ', ' + (nodeRadius * 0.66) + ')"';
             }
-        },
-        "Radial": {
+        }),
+        "Radial": radialLayout ({
             "setup": function (treeWidth, treeDepth) {
+                this.zero = 0.0;
                 this.xScale = (Math.PI * -2.0) / (treeWidth + 1);
                 this.yScale = (displayHeight * 0.5) / treeDepth;
-                this.c = { "x": displayWidth * 0.5, "y": displayHeight * 0.5 };
+                this.c = point (displayWidth * 0.5, displayHeight * 0.5);
             },
             "drawRow": function (i) {
                 var r = i * this.yScale;
                 return '<circle cx="' + this.c.x + '" cy="' + this.c.y + '" r="' + r + '" ' + styleNames.row + ' />';
-            },
-            "xy": function (xy) {
-                var x = xy.x * this.xScale;
-                var y = xy.y * this.yScale;
-                return { "x": this.c.x + (Math.cos(x) * y), "y": this.c.y + (Math.sin(x) * y) };
-            },
-            "Q": function (xy, mid) {
-                // a little bit straight out from the origin, and then softened
-                // by blending toward the midpoint somewhat
-                var qm = this.xy({ "x": xy.x, "y": xy.y + edgeTensionRadial });
-                return { "x": lerp(qm.x, mid.x, edgeTensionRadial2), "y": lerp(qm.y, mid.y, edgeTensionRadial2) };
-            },
-            "edge": function (from, to) {
-                return "";
-            },
-            "textTransform": function (xy) {
-                var p = this.xy(xy);
-                var angle = (xy.x * this.xScale) * (180.0 / Math.PI);
-                return 'transform="rotate(' + angle + ', ' + p.x + ', ' + p.y + ') translate(-' + (nodeRadius + 0.005) + ' -0.001)"';
             }
-        },
-        "Arc-Vertical": {
+        }),
+        "Arc-Vertical": radialLayout ({
             "setup": function (treeWidth, treeDepth) {
                 var angle = Math.asin((displayWidth * 0.5) / displayHeight) * 2.0;
                 this.zero = Math.PI - ((Math.PI - angle) / 2.0);
-                this.treeWidth = treeWidth;
                 this.xScale = -angle / treeWidth;
                 this.yScale = displayHeight / treeDepth;
-                this.c = { "x": displayWidth * 0.5, "y": 0.0 };
-            },
-            "drawRow": function (i) {
-                var left = this.xy({ "x": leftRowPadding, "y": i });
-                var right = this.xy({ "x": (this.treeWidth + rightRowPadding), "y": i });
-                var r = i * this.yScale;
-                return '<path d="M' + left.x + ',' + left.y + ' A' + r + ',' + r + ' 0 0,0 ' + right.x + ',' + right.y + '" ' + styleNames.row + ' />';
-            },
-            "xy": function (xy) {
-                var x = (xy.x * this.xScale) + this.zero;
-                var y = xy.y * this.yScale;
-                return { "x": this.c.x + (Math.cos(x) * y), "y": this.c.y + (Math.sin(x) * y) };
-            },
-            "Q": function (xy, mid) {
-                // a little bit straight out from the origin, and then softened
-                // by blending toward the midpoint somewhat
-                var qm = this.xy({ "x": xy.x, "y": xy.y + edgeTensionRadial });
-                return { "x": lerp(qm.x, mid.x, edgeTensionRadial2), "y": lerp(qm.y, mid.y, edgeTensionRadial2) };
-            },
-            "edge": function (from, to) {
-                return "";
-            },
-            "textTransform": function (xy) {
-                var p = this.xy(xy);
-                var angle = ((xy.x * this.xScale) + this.zero) * (180.0 / Math.PI);
-                return 'transform="rotate(' + angle + ', ' + p.x + ', ' + p.y + ') translate(-' + (nodeRadius + 0.005) + ' -0.001)"';
+                this.c = point (displayWidth * 0.5, 0.0);
             }
-        },
-        "Arc-Horizontal": {
+        }),
+        "Arc-Horizontal": radialLayout ({
             "setup": function (treeWidth, treeDepth) {
                 var angle = Math.asin((displayHeight * 0.5) / displayWidth) * 2.0;
                 this.zero = angle / 2.0;
-                this.treeWidth = treeWidth;
                 this.xScale = -angle / treeWidth;
                 this.yScale = displayWidth / treeDepth;
-                this.c = { "x": 0.0, "y": displayHeight * 0.5 };
-            },
-            "drawRow": function (i) {
-                var left = this.xy({ "x": leftRowPadding, "y": i });
-                var right = this.xy({ "x": (this.treeWidth + rightRowPadding), "y": i });
-                var r = i * this.yScale;
-                return '<path d="M' + left.x + ',' + left.y + ' A' + r + ',' + r + ' 0 0,0 ' + right.x + ',' + right.y + '" ' + styleNames.row + ' />';
-            },
-            "xy": function (xy) {
-                var x = (xy.x * this.xScale) + this.zero;
-                var y = xy.y * this.yScale;
-                return { "x": this.c.x + (Math.cos(x) * y), "y": this.c.y + (Math.sin(x) * y) };
-            },
-            "Q": function (xy, mid) {
-                // a little bit straight out from the origin, and then softened
-                // by blending toward the midpoint somewhat
-                var qm = this.xy({ "x": xy.x, "y": xy.y + edgeTensionRadial });
-                return { "x": lerp(qm.x, mid.x, edgeTensionRadial2), "y": lerp(qm.y, mid.y, edgeTensionRadial2) };
-            },
-            "edge": function (from, to) {
-                return "";
-            },
-            "textTransform": function (xy) {
-                var p = this.xy(xy);
-                var angle = ((xy.x * this.xScale) + this.zero) * (180.0 / Math.PI);
-                return 'transform="rotate(' + angle + ', ' + p.x + ', ' + p.y + ') translate(-' + (nodeRadius + 0.005) + ' -0.001)"';
+                this.c = point (0.0, displayHeight * 0.5);
             }
-        }
+        })
     };
 
     // functions to manipulate the desired layout
@@ -259,12 +215,29 @@ var TreeSvg = function () {
     // nodes to the display characteristics of the node)
     ts.renderWithHelper = function (root, helper) {
         // create the raw SVG picture for display, assumes a width/height aspect ratio of 3/2
-        var buffer = 0.15;
-        var svg = '<div class="tree-svg-div">' +
-                    '<svg class="tree-svg-svg" xmlns="http://www.w3.org/2000/svg" version="1.1" ' +
-                    'viewBox="-15, -10, 180, 120" ' +
-                    'preserveAspectRatio="xMidYMid meet"' +
-                    '>';
+        var svg = '<div class="tree-svg-div">';
+        svg += '<svg class="tree-svg-svg" xmlns="http://www.w3.org/2000/svg" version="1.1" ';
+
+        // compute the viewbox from the desired size with a bit of buffer
+        var buffer = 0.1;
+        var l, t, w, h;
+        if (displayWidth > displayHeight) {
+            var ratio = displayWidth / displayHeight;
+            t = -buffer * displayHeight;
+            l = t * ratio;
+            h = displayHeight * (1.0 + (buffer * 2.0));
+            w = h * ratio;
+        } else {
+            var ratio = displayHeight / displayWidth;
+            l = -buffer * displayWidth;
+            t = l * ratio;
+            w = displayWidth * (1.0 + (buffer * 2.0));
+            h = w * ratio;
+        }
+        console.log('viewBox="' + l + ', ' + t + ', ' + w + ', ' + h + '"');
+        svg += 'viewBox="' + l + ', ' + t + ', ' + w + ', ' + h + '" ';
+        svg += 'preserveAspectRatio="xMidYMid meet"';
+        svg += '>';
 
         // recursive depth check
         var recursiveDepthCheck = function (depth, container) {
@@ -309,6 +282,17 @@ var TreeSvg = function () {
             svg += layout.drawRow(i);
         }
 
+        // utility function to create an edge
+        var makeEdge = function (from, to) {
+            var c1 = point(from.x, lerp(to.y, from.y, edgeTension));
+            var c2 = point(to.x, lerp(from.y, to.y, edgeTension));
+            var f = layout.xy(from), t = layout.xy(to), m1 = layout.xy(c1), m2 = layout.xy(c2);
+            var svg = '<path ' + styleNames.edge + ' ';
+            svg += 'd="M' + f.x + ',' + f.y + ' C' + m1.x + ',' + m1.y + ' ' + m2.x + ',' + m2.y + ' ' + t.x + ',' + t.y + '" ';
+            svg += '/>';
+            return svg;
+        };
+
         // draw the edges
         var recursiveDrawEdges = function (container) {
             if (helper.getShowChildren(container)) {
@@ -317,18 +301,7 @@ var TreeSvg = function () {
                     recursiveDrawEdges(child);
                     if (container.node != null) {
                         if (drawArcEdges) {
-                            svg += layout.edge (container, child);
-                            /*
-                            var p = layout.xy(container);
-                            var c = layout.xy(child);
-                            var mid = { x: (p.x + c.x) / 2.0, y: (p.y + c.y) / 2.0 };
-                            var q = layout.Q(container, mid);
-                            svg += '<path ' + styleNames.edge + ' d="';
-                            svg += 'M' + p.x + ',' + p.y + ' ';
-                            svg += 'Q' + q.x + ',' + q.y + ' ' + mid.x + ',' + mid.y + ' ';
-                            svg += 'T' + c.x + ',' + c.y + ' ';
-                            svg += '"/>'
-                            */
+                            svg += makeEdge(container, child);
                         } else {
                             var p = layout.xy(container);
                             var c = layout.xy(child);
@@ -365,20 +338,17 @@ var TreeSvg = function () {
                 svg += (helper.getShowChildren(container) ? styleNames.node : styleNames.expand) + ' ';
 
                 // this will override the class definition if fill was not
-                // *EVER*specified
+                // *EVER*specified - useful for programmatic control
                 svg += 'fill="' + helper.getColor(container) + '" ';
                 svg += '/>';
 
                 // add the text description of the node
-                svg += '<text x="' + p.x + '" y="' + p.y + '" ';
-                svg += styleNames.title + ' ';
-                svg += layout.textTransform(container) + ' ';
-                /*
-                if (helper.onClick != null) {
-                    svg += 'onclick="' + helper.onClick + '(' + id + ');" ';
+                if (drawLabels) {
+                    svg += '<text x="' + p.x + '" y="' + p.y + '" ';
+                    svg += styleNames.title + ' ';
+                    svg += layout.textTransform(container) + ' ';
+                    svg += '>' + title + '</text>';
                 }
-                */
-                svg += '>' + title + '</text>';
 
                 // close the SVG group
                 svg += '</g>';

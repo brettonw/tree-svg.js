@@ -28,6 +28,7 @@ var TreeSvg = function () {
         "LEFT": ' style="text-anchor:end;" ',
         "RIGHT": ' style="text-anchor:start;" '
     };
+    var textPostSpacing = 0.5;
 
     // utility function for getting the tension right on the quadratic
     // Bezier curve we'll use for the edges
@@ -100,7 +101,7 @@ var TreeSvg = function () {
         "Linear-Vertical": linearLayout ({
             "setup": function (treeWidth, treeDepth) {
                 this.xScale = displayWidth / treeWidth;
-                this.yScale = displayHeight / (treeDepth + 1);
+                this.yScale = displayHeight / (treeDepth + textPostSpacing);
             },
             "xy": function (xy) {
                 return point(xy.x * this.xScale, xy.y * this.yScale);
@@ -114,7 +115,7 @@ var TreeSvg = function () {
         }),
         "Linear-Horizontal": linearLayout ({
             "setup": function (treeWidth, treeDepth) {
-                this.xScale = displayWidth / (treeDepth + 1);
+                this.xScale = displayWidth / (treeDepth + textPostSpacing);
                 this.yScale = displayHeight / treeWidth;
             },
             "xy": function (xy) {
@@ -130,7 +131,7 @@ var TreeSvg = function () {
             "setup": function (treeWidth, treeDepth) {
                 this.zero = 0.0;
                 this.xScale = (Math.PI * -2.0) / (treeWidth + 1);
-                this.yScale = (displayHeight * 0.5) / (treeDepth + 1);
+                this.yScale = (displayHeight * 0.5) / (treeDepth + textPostSpacing);
                 this.c = point (displayWidth * 0.5, displayHeight * 0.5);
             },
             "drawRow": function (i) {
@@ -143,7 +144,7 @@ var TreeSvg = function () {
                 var angle = Math.asin((displayWidth * 0.5) / displayHeight) * 2.0;
                 this.zero = Math.PI - ((Math.PI - angle) / 2.0);
                 this.xScale = -angle / treeWidth;
-                this.yScale = displayHeight / (treeDepth + 1);
+                this.yScale = displayHeight / (treeDepth + textPostSpacing);
                 this.c = point (displayWidth * 0.5, 0.0);
             }
         }),
@@ -152,7 +153,7 @@ var TreeSvg = function () {
                 var angle = Math.asin((displayHeight * 0.5) / displayWidth) * 2.0;
                 this.zero = angle / 2.0;
                 this.xScale = -angle / treeWidth;
-                this.yScale = displayWidth / (treeDepth + 1);
+                this.yScale = displayWidth / (treeDepth + textPostSpacing);
                 this.c = point (0.0, displayHeight * 0.5);
             }
         })

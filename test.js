@@ -64,18 +64,18 @@ var layoutChange = function (select) {
     drawTree();
 };
 
-var setLayoutSelect = function (select, valueIndex) {
-    var addSelectOption = function (select, name) {
-        var option = document.createElement("option");
-        option.text = name;
-        select.add(option);
-    };
+var addSelectOption = function (select, name, selected) {
+    var option = document.createElement("option");
+    option.text = name;
+    option.selected = selected;
+    select.add(option);
+};
 
+var setLayoutSelect = function (select, valueIndex) {
     var layouts = TreeSvg.getLayouts();
     for (var i = 0, count = layouts.length; i < count; ++i) {
-        addSelectOption(select, layouts[i]);
+        addSelectOption(select, layouts[i], i == valueIndex);
     }
-    select.value = layouts[valueIndex];
     TreeSvg.setLayout(select.value);
 };
 

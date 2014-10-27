@@ -20,6 +20,14 @@ var TreeSvg = function () {
 
     // label drawing assistance
     var drawLabels = true;
+    var TextPlacement = {
+        "LEFT": -1,
+        "RIGHT": 1
+    };
+    var labelStyle = {
+        "LEFT": ' style="text-anchor:end;" ',
+        "RIGHT": ' style="text-anchor:start;" '
+    };
 
     // utility function for getting the tension right on the quadratic
     // Bezier curve we'll use for the edges
@@ -74,10 +82,14 @@ var TreeSvg = function () {
             return point(this.c.x + (Math.cos(x) * y), this.c.y + (Math.sin(x) * y));
         };
 
-        rl.textTransform = function (xy) {
+        rl.textTransform = function (xy, leftOrRight) {
             var p = this.xy(xy);
             var angle = ((xy.x * this.xScale) + this.zero) * (180.0 / Math.PI);
-            return 'transform="rotate(' + angle + ', ' + p.x + ', ' + p.y + ') translate(-' + (nodeRadius * 1.5) + ', ' + (nodeRadius * 0.66) + ')"';
+            while (angle > 90) { angle -= 180; leftOrRight *= -1; }
+            while (angle < -90) { angle += 180; leftOrRight *= -1; }
+            var svg = (leftOrRight < 0) ? labelStyle.LEFT: labelStyle.RIGHT;
+            svg += 'transform="rotate(' + angle + ', ' + p.x + ', ' + p.y + ') translate(' + (leftOrRight * nodeRadius * 1.5) + ', ' + (nodeRadius * 0.66) + ')"';
+            return svg;
         };
 
         return rl;
@@ -88,33 +100,37 @@ var TreeSvg = function () {
         "Linear-Vertical": linearLayout ({
             "setup": function (treeWidth, treeDepth) {
                 this.xScale = displayWidth / treeWidth;
-                this.yScale = displayHeight / treeDepth;
+                this.yScale = displayHeight / (treeDepth + 1);
             },
             "xy": function (xy) {
                 return point(xy.x * this.xScale, xy.y * this.yScale);
             },
-            "textTransform": function (xy) {
+            "textTransform": function (xy, leftOrRight) {
                 var p = this.xy(xy);
-                return 'transform="rotate(90, ' + p.x + ', ' + p.y + ') translate(-' + (nodeRadius * 1.5) + ', ' + (nodeRadius * 0.66) + ')"';
+                var svg = (leftOrRight == TextPlacement.LEFT) ? labelStyle.LEFT : labelStyle.RIGHT;
+                svg += 'transform="rotate(90, ' + p.x + ', ' + p.y + ') translate(' + (leftOrRight * nodeRadius * 1.5) + ', ' + (nodeRadius * 0.66) + ')"';
+                return svg;
             }
         }),
         "Linear-Horizontal": linearLayout ({
             "setup": function (treeWidth, treeDepth) {
-                this.xScale = displayWidth / treeDepth;
+                this.xScale = displayWidth / (treeDepth + 1);
                 this.yScale = displayHeight / treeWidth;
             },
             "xy": function (xy) {
                 return point(xy.y * this.xScale, displayHeight - (xy.x * this.yScale));
             },
-            "textTransform": function (xy) {
-                return 'transform="translate(-' + (nodeRadius * 1.5) + ', ' + (nodeRadius * 0.66) + ')"';
+            "textTransform": function (xy, leftOrRight) {
+                var svg = (leftOrRight == TextPlacement.LEFT) ? labelStyle.LEFT : labelStyle.RIGHT;
+                svg += 'transform="translate(' + (leftOrRight * nodeRadius * 1.5) + ', ' + (nodeRadius * 0.66) + ')"';
+                return svg;
             }
         }),
         "Radial": radialLayout ({
             "setup": function (treeWidth, treeDepth) {
                 this.zero = 0.0;
                 this.xScale = (Math.PI * -2.0) / (treeWidth + 1);
-                this.yScale = (displayHeight * 0.5) / treeDepth;
+                this.yScale = (displayHeight * 0.5) / (treeDepth + 1);
                 this.c = point (displayWidth * 0.5, displayHeight * 0.5);
             },
             "drawRow": function (i) {
@@ -127,7 +143,7 @@ var TreeSvg = function () {
                 var angle = Math.asin((displayWidth * 0.5) / displayHeight) * 2.0;
                 this.zero = Math.PI - ((Math.PI - angle) / 2.0);
                 this.xScale = -angle / treeWidth;
-                this.yScale = displayHeight / treeDepth;
+                this.yScale = displayHeight / (treeDepth + 1);
                 this.c = point (displayWidth * 0.5, 0.0);
             }
         }),
@@ -136,7 +152,7 @@ var TreeSvg = function () {
                 var angle = Math.asin((displayHeight * 0.5) / displayWidth) * 2.0;
                 this.zero = angle / 2.0;
                 this.xScale = -angle / treeWidth;
-                this.yScale = displayWidth / treeDepth;
+                this.yScale = displayWidth / (treeDepth + 1);
                 this.c = point (0.0, displayHeight * 0.5);
             }
         })
@@ -349,8 +365,12 @@ var TreeSvg = function () {
                 // add the text description of the node
                 if (drawLabels) {
                     svg += '<text x="' + p.x + '" y="' + p.y + '" ';
-                    svg += styleNames.title + ' ';
-                    svg += layout.textTransform(container) + ' ';
+                    svg += styleNames.title
+                    if ((container.children.length == 0) || (!container.expanded)) {
+                        svg += layout.textTransform(container, TextPlacement.RIGHT) + ' ';
+                    } else {
+                        svg += layout.textTransform(container, TextPlacement.LEFT) + ' ';
+                    }
                     svg += '>' + title + '</text>';
                 }
 

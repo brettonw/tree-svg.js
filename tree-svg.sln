@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tree-svg.js", "tree-svg.js"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tree-svg", "tree-svg", "{DB7DC343-46D5-4BF6-9C2C-E1D412214C78}"
 	ProjectSection(SolutionItems) = preProject
+		tree-svg\tree-svg-helper.js = tree-svg\tree-svg-helper.js
 		tree-svg\tree-svg.css = tree-svg\tree-svg.css
 		tree-svg\tree-svg.js = tree-svg\tree-svg.js
 	EndProjectSection

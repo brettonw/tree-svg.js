@@ -16,7 +16,7 @@ var TreeSvg = function () {
     var edgeTension = 0.4;
 
     // "padding" values on the row lines
-    var rowPadding = 2;
+    var rowPadding = 0.5;
 
     // label drawing assistance
     var drawLabels = true;
@@ -192,45 +192,6 @@ var TreeSvg = function () {
         if (styleName in styleNames) {
             styleNames[styleName] = useCss;
         }
-    };
-    // helper function to walk an array of nodes and build a tree
-    ts.extractTreeFromParentField = function (nodes, idField, parentIdField) {
-        // internal function to get a node container from the id
-        var nodesById = {};
-        var getContainerById = function (id, node) {
-            if (!(id in nodesById)) {
-                nodesById[id] = {
-                    "children": [],
-                    "expanded": true,
-                    "id":id
-                };
-            }
-            var container = nodesById[id];
-            if (node != null) {
-                container.node = node;
-            }
-            return container;
-        };
-
-        // build a hash of nodes by id, with children, filling in the children
-        // as we walk the tree. assume the nodes are sorted in the desired order
-        var root = { id: -1, node: null, parent: null, children: [] };
-        for (var i = 0, count = nodes.length; i < count; ++i) {
-            var node = nodes[i];
-            var id = node[idField];
-            var container = getContainerById(id, node);
-            var parentId = node[parentIdField];
-            if (parentId != null) {
-                var parentContainer = getContainerById(parentId, null);
-                parentContainer.children.push(container);
-                container.parent = parentContainer;
-            } else {
-                root.children.push(container);
-            }
-        }
-
-        // return the finished result
-        return (root.children.length > 1) ? root : root.children[0];
     };
 
     // render with a helper (an adapter object that links externally defined

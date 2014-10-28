@@ -1,63 +1,13 @@
-﻿// function to make a tree container for testing
-var globalId = 0;
-var index = [];
-var makeContainer = function (node, parent, expanded) {
-        var container = {
-            "node": node,
-            "parent": parent,
-            "children": [],
-            "expanded": expanded,
-            "id": globalId++
-        };
-        if (parent != null) {
-            parent.children.push(container);
-        }
-        index[container.id] = container;
-        return container;
-    };
-
-var helper = TreeSvg.getDefaultHelper();
-helper.getTitle = function (container) { return container.node; };
-
-var root;
-var makeTree = function () {
-    console.log("Make Tree");
-
-    root = makeContainer("root", null, true);
-    var a = makeContainer("a", root, true);
-    var b = makeContainer("b", root, true);
-    var c = makeContainer("c", root, true);
-    var d = makeContainer("d", root, true);
-    makeContainer("e", a, true);
-    makeContainer("f", a, true);
-    makeContainer("g", a, true);
-    makeContainer("h", b, true);
-    makeContainer("i", b, true);
-    makeContainer("j", c, true);
-    makeContainer("k", c, true);
-    makeContainer("l", c, true);
-    var m = makeContainer("m", c, false);
-    makeContainer("n", d, true);
-    makeContainer("o", d, true);
-    makeContainer("p", m, true);
-    makeContainer("q", m, true);
-    makeContainer("r", m, true);
-    makeContainer("s", m, true);
-    makeContainer("t", m, true);
-    makeContainer("u", m, true);
-    makeContainer("v", m, true);
-};
+﻿var root;
 
 var drawTree = function () {
+    var helper = TreeSvg.getDefaultHelper();
+    helper.getTitle = function (container) { return container.node; };
     var svg = TreeSvg.renderWithHelper(root, helper);
     document.getElementById("tree").innerHTML = svg;
 };
 
-var onTreeClick = function (id) {
-    var container = index[id];
-    container.expanded = !container.expanded;
-    drawTree();
-};
+TreeSvgHelper.setClickHandler(function (container) { drawTree(); });
 
 var layoutChange = function (select) {
     TreeSvg.setLayout(select.value);
@@ -81,6 +31,29 @@ var setLayoutSelect = function (select, valueIndex) {
 
 var onLoad = function () {
     setLayoutSelect(document.getElementById("layoutSelect"), 0);
-    makeTree();
+    root = TreeSvgHelper.makeContainer("root", null, true);
+    var a = TreeSvgHelper.makeContainer("a", root, true);
+    var b = TreeSvgHelper.makeContainer("b", root, true);
+    var c = TreeSvgHelper.makeContainer("c", root, true);
+    var d = TreeSvgHelper.makeContainer("d", root, true);
+    TreeSvgHelper.makeContainer("e", a, true);
+    TreeSvgHelper.makeContainer("f", a, true);
+    TreeSvgHelper.makeContainer("g", a, true);
+    TreeSvgHelper.makeContainer("h", b, true);
+    TreeSvgHelper.makeContainer("i", b, true);
+    TreeSvgHelper.makeContainer("j", c, true);
+    TreeSvgHelper.makeContainer("k", c, true);
+    TreeSvgHelper.makeContainer("l", c, true);
+    var m = TreeSvgHelper.makeContainer("m", c, false);
+    TreeSvgHelper.makeContainer("n", d, true);
+    TreeSvgHelper.makeContainer("o", d, true);
+    TreeSvgHelper.makeContainer("p", m, true);
+    TreeSvgHelper.makeContainer("q", m, true);
+    TreeSvgHelper.makeContainer("r", m, true);
+    TreeSvgHelper.makeContainer("s", m, true);
+    TreeSvgHelper.makeContainer("t", m, true);
+    TreeSvgHelper.makeContainer("u", m, true);
+    TreeSvgHelper.makeContainer("v", m, true);
+
     drawTree();
 };

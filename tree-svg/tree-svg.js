@@ -2,7 +2,7 @@ var TreeSvg = function () {
     var ts = Object.create(null);
 
     // the rendering radius of nodes
-    var nodeRadius = 4.0;
+    var nodeRadius = 4.5;
     ts.setNodeRadius = function (r) {
         nodeRadius = r;
     };
@@ -20,6 +20,7 @@ var TreeSvg = function () {
 
     // label drawing assistance
     var drawLabels = true;
+    var labelLength = 12;
     var TextPlacement = {
         "LEFT": -1,
         "RIGHT": 1
@@ -28,7 +29,7 @@ var TreeSvg = function () {
         "LEFT": ' style="text-anchor:end;" ',
         "RIGHT": ' style="text-anchor:start;" '
     };
-    var textPostSpacing = 0.5;
+    var textPostSpacing = 0.33;
 
     // utility function for getting the tension right on the quadratic
     // Bezier curve we'll use for the edges
@@ -371,6 +372,11 @@ var TreeSvg = function () {
                         svg += layout.textTransform(container, TextPlacement.RIGHT) + ' ';
                     } else {
                         svg += layout.textTransform(container, TextPlacement.LEFT) + ' ';
+                    }
+
+                    // trim the title to a displayable length
+                    if (title.length > labelLength) {
+                        title = title.substring(0, labelLength - 1) + "&hellip;";
                     }
                     svg += '>' + title + '</text>';
                 }

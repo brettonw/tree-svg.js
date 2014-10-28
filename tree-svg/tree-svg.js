@@ -2,14 +2,14 @@ var TreeSvg = function () {
     var ts = Object.create(null);
 
     // the rendering radius of nodes
-    var nodeRadius = 1.5;
+    var nodeRadius = 4.0;
     ts.setNodeRadius = function (r) {
         nodeRadius = r;
     };
 
     // parameters used by the layout
-    var displayWidth = 150;
-    var displayHeight = 100;
+    var displayWidth = 600;
+    var displayHeight = 400;
 
     // parameters used to make pretty curves in the edges
     var drawArcEdges = true;

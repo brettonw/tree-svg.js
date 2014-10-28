@@ -355,7 +355,7 @@ var TreeSvg = function () {
 
     ts.getDefaultHelper = function () {
         return {
-            getTitle: function (container) { return "" + id; },
+            getTitle: function (container) { return "" + container.id; },
             getColor: function (container) { return "red"; }
         };
     };

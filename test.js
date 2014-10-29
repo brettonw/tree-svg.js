@@ -1,16 +1,16 @@
 ﻿var root;
 
 var drawTree = function () {
-    var helper = TreeSvg.getDefaultHelper();
-    helper.getTitle = function (container) { return container.node; };
-    var svg = TreeSvg.renderWithHelper(root, helper);
+    var adapter = TreeSvg.getDefaultAdapter();
+    adapter.getTitle = function (container) { return container.node; };
+    var layoutName = document.getElementById("layoutSelect").value;
+    var svg = TreeSvg.renderSvg(root, layoutName, adapter);
     document.getElementById("tree").innerHTML = svg;
 };
 
 TreeSvgHelper.setClickHandler(function (container) { drawTree(); });
 
 var layoutChange = function (select) {
-    TreeSvg.setLayout(select.value);
     drawTree();
 };
 
@@ -26,34 +26,34 @@ var setLayoutSelect = function (select, valueIndex) {
     for (var i = 0, count = layouts.length; i < count; ++i) {
         addSelectOption(select, layouts[i], i == valueIndex);
     }
-    TreeSvg.setLayout(select.value);
 };
 
 var onLoad = function () {
     setLayoutSelect(document.getElementById("layoutSelect"), 0);
-    root = TreeSvgHelper.makeContainer("root", null, true);
-    var a = TreeSvgHelper.makeContainer("a", root, true);
-    var b = TreeSvgHelper.makeContainer("b", root, true);
-    var c = TreeSvgHelper.makeContainer("c", root, true);
-    var d = TreeSvgHelper.makeContainer("d", root, true);
-    TreeSvgHelper.makeContainer("e", a, true);
-    TreeSvgHelper.makeContainer("f", a, true);
-    TreeSvgHelper.makeContainer("g", a, true);
-    TreeSvgHelper.makeContainer("h", b, true);
-    TreeSvgHelper.makeContainer("i", b, true);
-    TreeSvgHelper.makeContainer("j", c, true);
-    TreeSvgHelper.makeContainer("k", c, true);
-    TreeSvgHelper.makeContainer("l", c, true);
-    var m = TreeSvgHelper.makeContainer("m", c, false);
-    TreeSvgHelper.makeContainer("n", d, true);
-    TreeSvgHelper.makeContainer("o", d, true);
-    TreeSvgHelper.makeContainer("p", m, true);
-    TreeSvgHelper.makeContainer("q", m, true);
-    TreeSvgHelper.makeContainer("r", m, true);
-    TreeSvgHelper.makeContainer("s", m, true);
-    TreeSvgHelper.makeContainer("t", m, true);
-    TreeSvgHelper.makeContainer("u", m, true);
-    TreeSvgHelper.makeContainer("v", m, true);
+    var tsh = TreeSvgHelper;
+    root = tsh.makeContainer("root", null, true);
+    var a = tsh.makeContainer("a", root, true);
+    var b = tsh.makeContainer("b", root, true);
+    var c = tsh.makeContainer("c", root, true);
+    var d = tsh.makeContainer("d", root, true);
+    tsh.makeContainer("e", a, true);
+    tsh.makeContainer("f", a, true);
+    tsh.makeContainer("g", a, true);
+    tsh.makeContainer("h", b, true);
+    tsh.makeContainer("i", b, true);
+    tsh.makeContainer("j", c, true);
+    tsh.makeContainer("k", c, true);
+    tsh.makeContainer("l", c, true);
+    var m = tsh.makeContainer("m", c, false);
+    tsh.makeContainer("n", d, true);
+    tsh.makeContainer("o", d, true);
+    tsh.makeContainer("p", m, true);
+    tsh.makeContainer("q", m, true);
+    tsh.makeContainer("r", m, true);
+    tsh.makeContainer("s", m, true);
+    tsh.makeContainer("t", m, true);
+    tsh.makeContainer("u", m, true);
+    tsh.makeContainer("v", m, true);
 
     drawTree();
 };

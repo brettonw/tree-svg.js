@@ -9,13 +9,15 @@ var TreeSvgHelper = function () {
 
     // internal click handler
     tsh.index = [];
-    tsh.handleClick = function (id) {
-        // if there's no handler, don't do anything
-        if (clickHandler != null) {
-            // flip a tree node expanded status
-            var container = this.index[id];
-            container.expanded = !container.expanded;
-            clickHandler(container);
+    tsh.handleClick = function (id, event) {
+        if (event.detail > 1) {
+            // if there's no handler, don't do anything
+            if (clickHandler != null) {
+                // flip a tree node expanded status
+                var container = this.index[id];
+                container.expanded = !container.expanded;
+                clickHandler(container, event);
+            }
         }
     };
 
@@ -31,7 +33,7 @@ var TreeSvgHelper = function () {
         if (parent != null) {
             parent.children.push(container);
         }
-        this.index.push (container);
+        this.index.push(container);
         return container;
     };
 
@@ -73,9 +75,7 @@ var TreeSvgHelper = function () {
     return tsh;
 }();
 
-// external click handler for the tree to talk to, just passes it into the 
-// internal click handler
-var onTreeClick = function (id) {
-    TreeSvgHelper.handleClick (id);
+// external click handler for the tree, passes it into the internal handler
+var onTreeClick = function (id, event) {
+    TreeSvgHelper.handleClick(id, event);
 };
-

@@ -8,7 +8,7 @@ var drawTree = function () {
     document.getElementById("tree").innerHTML = svg;
 };
 
-TreeSvgHelper.setClickHandler(function (container) { drawTree(); });
+TreeSvgHelper.setClickHandler(function (container, event) { drawTree(); });
 
 var layoutChange = function (select) {
     drawTree();

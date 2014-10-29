@@ -16,10 +16,18 @@ div {
     width:              600px;
 }
 
-div#tree {
+div#title {
     margin-top:         20px;
+}
+
+div#tree {
+    margin-top:         5px;
     height:             400px;
     background-color:   #ff0000;
+}
+
+div#footer {
+    margin-top:         5px;
 }
 
 .tree-svg-node {

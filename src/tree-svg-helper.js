@@ -7,17 +7,51 @@ var TreeSvgHelper = function () {
         clickHandler = ch;
     };
 
+    // the internal node index for mapping containers by internal id
+    var index = [];
+    tsh.Reset = function () {
+        index = [];
+    };
+
     // internal click handler
-    tsh.index = [];
-    tsh.handleClick = function (id, event) {
-        if (event.detail > 1) {
+    var clickTimeout = null;
+    tsh.handleClick = function (sourceClickEvent) {
+        var makeClickEvent = function (type, sourceClickEvent) {
+            return {
+                "type": type,
+                "container": index[sourceClickEvent.id],
+                "modifiers": (sourceClickEvent.event.altKey ? 1 : 0) + (sourceClickEvent.event.ctrlKey ? 2 : 0) + (sourceClickEvent.event.shiftKey ? 4 : 0),
+                "timestamp": sourceClickEvent.event.timeStamp
+            };
+        };
+
+        var sendClickEvent = function (clickEvent) {
             // if there's no handler, don't do anything
             if (clickHandler != null) {
+                //console.log("sendClickEvent: type (" + clickEvent.type + "), modifiers (" + clickEvent.modifiers + "), timestamp (" + clickEvent.timestamp + ")");
                 // flip a tree node expanded status
-                var container = this.index[id];
-                container.expanded = !container.expanded;
-                clickHandler(container, event);
+                if (clickEvent.type == "dblclick") {
+                    clickEvent.container.expanded = !clickEvent.container.expanded;
+                }
+                clickHandler(clickEvent);
             }
+        };
+
+        if (clickTimeout == null) {
+            // there is no pending click, so we have to save this click and 
+            // wait for the timeout
+            var doubleClickTimeMs = 300;
+            clickTimeout = setTimeout(function () {
+                // we got no further click, so we should send the original 
+                // click message
+                clickTimeout = null;
+                sendClickEvent(makeClickEvent("click", sourceClickEvent));
+            }, doubleClickTimeMs);
+        } else {
+            // there is a pending click, turn this into a double click and send it
+            clearTimeout(clickTimeout);
+            clickTimeout = null;
+            sendClickEvent(makeClickEvent("dblclick", sourceClickEvent));
         }
     };
 
@@ -28,12 +62,12 @@ var TreeSvgHelper = function () {
             "parent": parent,
             "children": [],
             "expanded": expanded,
-            "id": this.index.length
+            "id": index.length
         };
         if (parent != null) {
             parent.children.push(container);
         }
-        this.index.push(container);
+        index.push(container);
         return container;
     };
 
@@ -76,6 +110,6 @@ var TreeSvgHelper = function () {
 }();
 
 // external click handler for the tree, passes it into the internal handler
-var onTreeClick = function (id, event) {
-    TreeSvgHelper.handleClick(id, event);
+var onTreeClick = function (sourceClickEvent) {
+    TreeSvgHelper.handleClick(sourceClickEvent);
 };

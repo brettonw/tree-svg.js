@@ -83,7 +83,7 @@ var TreeSvg = function () {
             while (angle > 90) { angle -= 180; leftOrRight *= -1; }
             while (angle < -90) { angle += 180; leftOrRight *= -1; }
             var svg = (leftOrRight < 0) ? labelStyle.LEFT : labelStyle.RIGHT;
-            svg += 'transform="rotate(' + angle + ', ' + p.x + ', ' + p.y + ') translate(' + (leftOrRight * nodeRadius * 1.5) + ', ' + (nodeRadius * 0.66) + ')"';
+            svg += 'transform="rotate(' + angle + ', ' + p.x + ', ' + p.y + ') translate(' + (leftOrRight * nodeRadius * 1.5) + ', 0)"';
             return svg;
         };
 
@@ -103,7 +103,7 @@ var TreeSvg = function () {
             "textTransform": function (xy, leftOrRight) {
                 var p = this.xy(xy);
                 var svg = (leftOrRight == TextPlacement.LEFT) ? labelStyle.LEFT : labelStyle.RIGHT;
-                svg += 'transform="rotate(90, ' + p.x + ', ' + p.y + ') translate(' + (leftOrRight * nodeRadius * 1.5) + ', ' + (nodeRadius * 0.66) + ')"';
+                svg += 'transform="rotate(90, ' + p.x + ', ' + p.y + ') translate(' + (leftOrRight * nodeRadius * 1.5) + ', 0)"';
                 return svg;
             }
         }),
@@ -117,7 +117,7 @@ var TreeSvg = function () {
             },
             "textTransform": function (xy, leftOrRight) {
                 var svg = (leftOrRight == TextPlacement.LEFT) ? labelStyle.LEFT : labelStyle.RIGHT;
-                svg += 'transform="translate(' + (leftOrRight * nodeRadius * 1.5) + ', ' + (nodeRadius * 0.66) + ')"';
+                svg += 'transform="translate(' + (leftOrRight * nodeRadius * 1.5) + ', 0)"';
                 return svg;
             }
         }),
@@ -271,8 +271,10 @@ var TreeSvg = function () {
             if (container.node != null) {
                 var title = adapter.getTitle(container);
 
-                // create an SVG group, with a click handler
-                svg += '<g onclick="onTreeClick(' + container.id + ', evt);">';
+                // create an SVG group, with a click handler, note that the 
+                // browsers all handle this differently (of course) - so we
+                // go with the W3C way, and only handle click events
+                svg += '<g onclick="onTreeClick({ id:' + container.id + ', event:evt });">';
 
                 // add a node as a circle
                 svg += '<circle title="' + title + '" ';
@@ -299,7 +301,7 @@ var TreeSvg = function () {
                     if (title.length > labelLength) {
                         title = title.substring(0, labelLength - 1) + "&hellip;";
                     }
-                    svg += '>' + title + '</text>';
+                    svg += '><tspan dy="0.25em">' + title + '</tspan></text>';
                 }
 
                 // close the SVG group

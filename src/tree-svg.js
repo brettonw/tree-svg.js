@@ -301,7 +301,7 @@ var TreeSvg = function () {
                     if (title.length > labelLength) {
                         title = title.substring(0, labelLength - 1) + "&hellip;";
                     }
-                    svg += '><tspan dy="0.25em">' + title + '</tspan></text>';
+                    svg += '><tspan dy="0.33em">' + title + '</tspan></text>';
                 }
 
                 // close the SVG group

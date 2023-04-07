@@ -1,22 +1,22 @@
-var TreeSvgHelper = function () {
-    var tsh = Object.create(null);
+let TreeSvgHelper = function () {
+    let tsh = Object.create(null);
 
     // a click handler function that can be set outside this API
-    var clickHandler = null;
+    let clickHandler = null;
     tsh.setClickHandler = function (ch) {
         clickHandler = ch;
     };
 
     // the internal node index for mapping containers by internal id
-    var index = [];
+    let index = [];
     tsh.Reset = function () {
         index = [];
     };
 
     // internal click handler
-    var clickTimeout = null;
+    let clickTimeout = null;
     tsh.handleClick = function (sourceClickEvent) {
-        var makeClickEvent = function (type, sourceClickEvent) {
+        let makeClickEvent = function (type, sourceClickEvent) {
             return {
                 "type": type,
                 "container": index[sourceClickEvent.id],
@@ -25,12 +25,12 @@ var TreeSvgHelper = function () {
             };
         };
 
-        var sendClickEvent = function (clickEvent) {
+        let sendClickEvent = function (clickEvent) {
             // if there's no handler, don't do anything
             if (clickHandler != null) {
                 //console.log("sendClickEvent: type (" + clickEvent.type + "), modifiers (" + clickEvent.modifiers + "), timestamp (" + clickEvent.timestamp + ")");
                 // flip a tree node expanded status
-                if (clickEvent.type == "dblclick") {
+                if (clickEvent.type === "dblclick") {
                     clickEvent.container.expanded = !clickEvent.container.expanded;
                 }
                 clickHandler(clickEvent);
@@ -40,7 +40,7 @@ var TreeSvgHelper = function () {
         if (clickTimeout == null) {
             // there is no pending click, so we have to save this click and 
             // wait for the timeout
-            var doubleClickTimeMs = 300;
+            let doubleClickTimeMs = 300;
             clickTimeout = setTimeout(function () {
                 // we got no further click, so we should send the original 
                 // click message
@@ -57,7 +57,7 @@ var TreeSvgHelper = function () {
 
     // helper function to create a node container in a tree
     tsh.makeContainer = function (node, parent, expanded) {
-        var container = {
+        let container = {
             "node": node,
             "parent": parent,
             "children": [],
@@ -73,11 +73,11 @@ var TreeSvgHelper = function () {
 
     // helper function to walk an array of nodes and build a tree
     tsh.extractTreeFromParentField = function (nodes, idField, parentIdField) {
-        var scope = this;
+        let scope = this;
 
         // internal function to get a node container from the id
-        var nodesById = {};
-        var getContainerById = function (id) {
+        let nodesById = {};
+        let getContainerById = function (id) {
             if (!(id in nodesById)) {
                 nodesById[id] = scope.makeContainer(null, null, true);
             }
@@ -86,15 +86,15 @@ var TreeSvgHelper = function () {
 
         // build a hash of nodes by id, with children, filling in the children
         // as we walk the tree. assume the nodes are sorted in the desired order
-        var root = scope.makeContainer(null, null, true);
-        for (var i = 0, count = nodes.length; i < count; ++i) {
-            var node = nodes[i];
-            var id = node[idField];
-            var container = getContainerById(id);
+        let root = scope.makeContainer(null, null, true);
+        for (let i = 0, count = nodes.length; i < count; ++i) {
+            let node = nodes[i];
+            let id = node[idField];
+            let container = getContainerById(id);
             container.node = node;
-            var parentId = node[parentIdField];
+            let parentId = node[parentIdField];
             if (parentId != null) {
-                var parentContainer = getContainerById(parentId);
+                let parentContainer = getContainerById(parentId);
                 parentContainer.children.push(container);
                 container.parent = parentContainer;
             } else {
@@ -110,6 +110,6 @@ var TreeSvgHelper = function () {
 }();
 
 // external click handler for the tree, passes it into the internal handler
-var onTreeClick = function (sourceClickEvent) {
+export let onTreeClick = function (sourceClickEvent) {
     TreeSvgHelper.handleClick(sourceClickEvent);
 };
